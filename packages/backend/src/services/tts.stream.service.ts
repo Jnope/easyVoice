@@ -71,7 +71,15 @@ export async function generateTTSStream(params: Required<EdgeSchema>, task: Task
   }
 
   if (useLLM) {
-    generateWithLLMStream(task)
+    generateWithLLMStream(task).catch((err) => {
+      const message = err instanceof Error ? err.message : String(err)
+      logger.error(`LLM stream generation failed: ${message}`)
+      const { res } = task.context as Required<NonNullable<Task['context']>>
+      if (!res.headersSent) {
+        res.status(500).json({ code: 500, success: false, message })
+      }
+      task.endTask?.(task.id)
+    })
   } else {
     generateWithoutLLMStream({ ...params, output: segment.id }, task)
   }
@@ -123,34 +131,44 @@ async function generateWithLLMStream(task: Task) {
     outputStream.pipe(res)
     outputStream.pipe(localStream)
 
-    for (let seg of segments) {
-      count++
-      const prompt = getPrompt(lang, voiceList, seg)
-      logger.debug(`Prompt for LLM: ${prompt}`)
-      const llmResponse = await fetchLLMSegment(prompt)
-      let llmSegments = llmResponse?.result || llmResponse?.segments || []
-      if (!Array.isArray(llmSegments)) {
-        throw new Error(
-          'LLM response is not an array, please switch to Edge TTS mode or use another model'
-        )
+    try {
+      for (let seg of segments) {
+        count++
+        const prompt = getPrompt(lang, voiceList, seg)
+        logger.debug(`Prompt for LLM: ${prompt}`)
+        const llmResponse = await fetchLLMSegment(prompt)
+        let llmSegments = llmResponse?.result || llmResponse?.segments || []
+        if (!Array.isArray(llmSegments)) {
+          throw new Error(
+            'LLM response is not an array, please switch to Edge TTS mode or use another model'
+          )
+        }
+        for (let segment of formatLlmSegments(llmSegments)) {
+          const stream = (await generateSingleVoiceStream({
+            ...segment,
+            output,
+            outputType: 'stream',
+          })) as Readable
+          stream.pipe(outputStream, { end: false })
+          await new Promise((resolve) => {
+            stream.on('end', resolve)
+          })
+        }
+        logger.info(`Progress: ${getProgress()}%`)
       }
-      for (let segment of formatLlmSegments(llmSegments)) {
-        const stream = (await generateSingleVoiceStream({
-          ...segment,
-          output,
-          outputType: 'stream',
-        })) as Readable
-        stream.pipe(outputStream, { end: false })
-        await new Promise((resolve) => {
-          stream.on('end', resolve)
-        })
+      outputStream.end()
+      setTimeout(() => {
+        handleSrt(output)
+      }, 200)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      logger.error(`LLM multi-segment generation failed: ${message}`)
+      outputStream.destroy()
+      localStream.destroy()
+      if (!res.headersSent) {
+        res.status(500).json({ code: 500, success: false, message })
       }
-      logger.info(`Progress: ${getProgress()}%`)
     }
-    outputStream.end()
-    setTimeout(() => {
-      handleSrt(output)
-    }, 200)
   }
 }
 const buildFinal = async (finalSegments: TTSResult[], id: string) => {
@@ -367,24 +385,40 @@ function validateLangAndVoice(lang: string, voice: string, res: Response): boole
 /**
  * 从 LLM 获取分段参数
  */
-async function fetchLLMSegment(prompt: string): Promise<any> {
-  const response = await openai.createChatCompletion({
-    messages: [
-      {
-        role: 'system',
-        content: 'You are a helpful assistant. And you can return valid json object',
-      },
-      { role: 'user', content: prompt },
-    ],
-    // temperature: 0.7,
-    // max_tokens: 500,
-    response_format: { type: 'json_object' },
-  })
+async function fetchLLMSegment(prompt: string, retries = 2): Promise<any> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const response = await openai.createChatCompletion(
+        {
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a helpful assistant. And you can return valid json object',
+            },
+            { role: 'user', content: prompt },
+          ],
+          // temperature: 0.7,
+          // max_tokens: 500,
+          response_format: { type: 'json_object' },
+        },
+        { timeout: 180000 }
+      )
 
-  if (!response.choices[0].message.content) {
-    throw new Error(ErrorMessages.INVALID_API_RESPONSE)
+      if (!response.choices[0].message.content) {
+        throw new Error(ErrorMessages.INVALID_API_RESPONSE)
+      }
+      return parseLLMResponse(response)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      if (attempt < retries) {
+        logger.warn(`fetchLLMSegment attempt ${attempt + 1} failed: ${message}, retrying...`)
+        await asyncSleep(1000 * (attempt + 1))
+      } else {
+        throw new Error(`LLM segment fetch failed after ${retries + 1} attempts: ${message}`)
+      }
+    }
   }
-  return parseLLMResponse(response)
+  throw new Error('Unexpected flow in fetchLLMSegment')
 }
 
 /**

@@ -19,6 +19,7 @@ export const ALLOWED_EXTENSIONS = new Set(['.mp3', '.wav', '.ogg', '.flac', '.sr
 export const OPENAI_BASE_URL = process.env.OPENAI_BASE_URL
 export const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 export const MODEL_NAME = process.env.MODEL_NAME
+export const MODEL_TIMEOUT = parseInt(process.env.MODEL_TIMEOUT || "0") || 300000
 
 export const STATIC_DOMAIN = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : ''
 

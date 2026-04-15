@@ -1,5 +1,5 @@
 import { AxiosError } from 'axios'
-import { MODEL_NAME, OPENAI_BASE_URL, OPENAI_API_KEY } from '../config'
+import { MODEL_NAME, OPENAI_BASE_URL, OPENAI_API_KEY, MODEL_TIMEOUT } from '../config'
 import { logger } from './logger'
 import { fetcher } from './request'
 
@@ -20,7 +20,7 @@ export function createOpenAIClient() {
   let currentConfig: OpenAIConfig = {
     baseURL: OPENAI_BASE_URL,
     model: MODEL_NAME,
-    timeout: 60000,
+    timeout: MODEL_TIMEOUT,
     apiKey: OPENAI_API_KEY,
   }
   logger.debug(`init openai with: `, {
