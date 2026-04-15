@@ -1,8 +1,8 @@
 # EasyVoice 🎙️
 
-## 项目简介 ✨  
+## 项目简介 ✨
 
-**EasyVoice** 是一个开源的文本、小说智能转语音解决方案，旨在帮助用户轻松将文本内容转换为高质量的语音输出。  
+**EasyVoice** 是一个开源的文本、小说智能转语音解决方案，旨在帮助用户轻松将文本内容转换为高质量的语音输出。
 
 - **一键生成语音和字幕**
 
@@ -31,17 +31,17 @@
 - **流式传输** 🌊  
   再多的文本，都可以迅速返回音频直接开始试听！
 - **多语言支持** 🌍  
-  支持中文、英文等多种语言。  
+  支持中文、英文等多种语言。
 - **字幕支持** 💬  
-  自动生成字幕文件，方便视频制作和字幕翻译。  
+  自动生成字幕文件，方便视频制作和字幕翻译。
 - **角色配音** 🎭  
-  提供多种声音选项，完美适配不同角色。  
+  提供多种声音选项，完美适配不同角色。
 - **自定义设置** ⚙️  
-  可调整语速、音调等参数，打造专属语音风格。  
+  可调整语速、音调等参数，打造专属语音风格。
 - **AI 推荐** 🧠  
-  通过 AI 智能推荐最适合的语音配置，省心又贴心。  
+  通过 AI 智能推荐最适合的语音配置，省心又贴心。
 - **试听功能** 🎧  
-  生成前可试听效果，确保每一句都如你所愿！  
+  生成前可试听效果，确保每一句都如你所愿！
 
 ## Screenshots📸
 
@@ -170,10 +170,10 @@ curl -X POST http://localhost:3000/api/v1/tts/generateJson \
 
 ## 技术实现 🛠️
 
-- **前端**：Vue 3 + TypeScript + Element Plus 🌐  
-- **后端**：Node.js + Express + TypeScript ⚡  
-- **语音合成**：Microsoft Azure TTS(更多引擎接入中) + OpenAI(OpenAI 兼容即可) + ffmpeg 🎤  
-- **部署**：Node.js + Docker + Docker Compose 🐳  
+- **前端**：Vue 3 + TypeScript + Element Plus 🌐
+- **后端**：Node.js + Express + TypeScript ⚡
+- **语音合成**：Microsoft Azure TTS(更多引擎接入中) + OpenAI(OpenAI 兼容即可) + ffmpeg 🎤
+- **部署**：Node.js + Docker + Docker Compose 🐳
 
 ## 快速开发 🚀
 
@@ -199,17 +199,18 @@ pnpm dev
 
 ## 环境变量 ⚙️
 
-| 变量名              | 默认值                         | 描述                          |
-|--------------------|-------------------------------|------------------------------|
-| `PORT`             | `3000`                        | 服务端口                      |
-| `OPENAI_BASE_URL`  | `https://api.openai.com/v1`   | OpenAI 兼容 API 地址          |
-| `OPENAI_API_KEY`   | -                             | OpenAI API Key               |
-| `MODEL_NAME`       | -                             | 使用的模型名称                 |
-| `RATE_LIMIT_WINDOW`| `1`                           | 速率限制窗口大小（分钟）         |
-| `RATE_LIMIT`       | `10`                          | 速率限制次数                   |
-| `EDGE_API_LIMIT`   | `3`                           | Edge-TTS API 并发数           |
+| 变量名              | 默认值                      | 描述                     |
+| ------------------- | --------------------------- | ------------------------ |
+| `PORT`              | `3000`                      | 服务端口                 |
+| `OPENAI_BASE_URL`   | `https://api.openai.com/v1` | OpenAI 兼容 API 地址     |
+| `OPENAI_API_KEY`    | -                           | OpenAI API Key           |
+| `MODEL_NAME`        | -                           | 使用的模型名称           |
+| `RATE_LIMIT_WINDOW` | `1`                         | 速率限制窗口大小（分钟） |
+| `RATE_LIMIT`        | `10`                        | 速率限制次数             |
+| `EDGE_API_LIMIT`    | `3`                         | Edge-TTS API 并发数      |
+| `MODEL_TIMEOUT`     | 300000                      | LLM API 超时时间         |
 
-- **配置文件**：可在 `.env` 或 `packages/backend/.env` 中设置，优先级为 `packages/backend/.env > .env`。  
+- **配置文件**：可在 `.env` 或 `packages/backend/.env` 中设置，优先级为 `packages/backend/.env > .env`。
 - **Docker 配置**：通过 `-e` 参数传入环境变量，如上文示例。
 
 ## FAQ
@@ -225,6 +226,6 @@ pnpm dev
 
 ## Tips
 
-- 当前主要通过 Edge-TTS API 提供免费语音合成。  
+- 当前主要通过 Edge-TTS API 提供免费语音合成。
 
 - 未来计划支持官方 API、Google TTS、声音克隆等功能。
