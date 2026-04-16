@@ -115,7 +115,7 @@ async function generateWithLLMStream(task: Task) {
     let llmSegments = llmResponse?.result || llmResponse?.segments || []
     if (!Array.isArray(llmSegments)) {
       throw new Error(
-        'LLM response is not an array, please switch to Edge TTS mode or use another model'
+        'LLM response is not an array, please switch to Edge TTS mode or use another model',
       )
     }
     buildSegmentList(formatLlmSegments(llmSegments), task)
@@ -140,7 +140,7 @@ async function generateWithLLMStream(task: Task) {
         let llmSegments = llmResponse?.result || llmResponse?.segments || []
         if (!Array.isArray(llmSegments)) {
           throw new Error(
-            'LLM response is not an array, please switch to Edge TTS mode or use another model'
+            'LLM response is not an array, please switch to Edge TTS mode or use another model',
           )
         }
         for (let segment of formatLlmSegments(llmSegments)) {
@@ -177,7 +177,7 @@ const buildFinal = async (finalSegments: TTSResult[], id: string) => {
       const base = path.basename(file.audio)
       const jsonPath = path.resolve(AUDIO_DIR, base.replace('.mp3', ''), 'all_splits.mp3.json')
       return readJson<SubtitleFile>(jsonPath)
-    })
+    }),
   )
 
   const mergedJson = mergeSubtitleFiles(subtitleFiles)
@@ -187,7 +187,7 @@ const buildFinal = async (finalSegments: TTSResult[], id: string) => {
   await fs.writeFile(finalJson, JSON.stringify(mergedJson, null, 2))
   await generateSrt(finalJson, path.resolve(AUDIO_DIR, id.replace('.mp3', '.srt')))
   const fileList = finalSegments.map((segment) =>
-    path.resolve(AUDIO_DIR, path.parse(segment.audio).base)
+    path.resolve(AUDIO_DIR, path.parse(segment.audio).base),
   )
   const outputFile = path.resolve(AUDIO_DIR, id)
   await concatDirAudio({ inputDir: finalDir, fileList, outputFile })
@@ -322,7 +322,7 @@ async function buildSegmentList(segments: BuildSegment[], task: Task): Promise<v
           throw Object.assign(error, { segmentIndex: index, attempt: attempt + 1 } as SegmentError)
         }
         logger.warn(
-          `Segment ${index + 1} failed (attempt ${attempt + 1}/${maxRetries}): ${error.message}`
+          `Segment ${index + 1} failed (attempt ${attempt + 1}/${maxRetries}): ${error.message}`,
         )
         await asyncSleep(1000)
         return generateWithRetry(attempt + 1)
@@ -359,7 +359,7 @@ async function buildSegmentList(segments: BuildSegment[], task: Task): Promise<v
 async function runConcurrentTasks(tasks: (() => Promise<any>)[], limit: number): Promise<any[]> {
   logger.debug(`Running ${tasks.length} tasks with a limit of ${limit}`)
   const controller = new MapLimitController(tasks, limit, () =>
-    logger.info('All concurrent tasks completed')
+    logger.info('All concurrent tasks completed'),
   )
   const { results, cancelled } = await controller.run()
   logger.info(`Tasks completed: ${results.length}, cancelled: ${cancelled}`)
@@ -385,23 +385,21 @@ function validateLangAndVoice(lang: string, voice: string, res: Response): boole
 /**
  * 从 LLM 获取分段参数
  */
-async function fetchLLMSegment(prompt: string, retries = 2): Promise<any> {
+async function fetchLLMSegment(prompt: string, retries = 0): Promise<any> {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const response = await openai.createChatCompletion(
-        {
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a helpful assistant. And you can return valid json object',
-            },
-            { role: 'user', content: prompt },
-          ],
-          // temperature: 0.7,
-          // max_tokens: 500,
-          response_format: { type: 'json_object' },
-        },
-      )
+      const response = await openai.createChatCompletion({
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a helpful assistant. And you can return valid json object',
+          },
+          { role: 'user', content: prompt },
+        ],
+        // temperature: 0.7,
+        // max_tokens: 500,
+        response_format: { type: 'json_object' },
+      })
 
       if (!response.choices[0].message.content) {
         throw new Error(ErrorMessages.INVALID_API_RESPONSE)
@@ -480,12 +478,12 @@ export async function concatDirSrt({
     jsonFiles ||
     sortAudioDir(
       fileList!.map((file) => `${file}.json`),
-      '.json'
+      '.json',
     )
   if (!_jsonFiles.length) throw new Error('No JSON files found for subtitles')
 
   const subtitleFiles: SubtitleFiles = await Promise.all(
-    _jsonFiles.map((file) => readJson<SubtitleFile>(file))
+    _jsonFiles.map((file) => readJson<SubtitleFile>(file)),
   )
   const mergedJson = mergeSubtitleFiles(subtitleFiles)
   const tempJsonPath = path.resolve(inputDir, 'all_splits.mp3.json')
@@ -500,7 +498,7 @@ function sortAudioDir(fileList: string[], ext: string = '.mp3'): string[] {
   return fileList
     .filter((file) => path.extname(file).toLowerCase() === ext)
     .sort(
-      (a, b) => Number(path.parse(a).name.split('_')[0]) - Number(path.parse(b).name.split('_')[0])
+      (a, b) => Number(path.parse(a).name.split('_')[0]) - Number(path.parse(b).name.split('_')[0]),
     )
 }
 
