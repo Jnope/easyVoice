@@ -401,7 +401,6 @@ async function fetchLLMSegment(prompt: string, retries = 2): Promise<any> {
           // max_tokens: 500,
           response_format: { type: 'json_object' },
         },
-        { timeout: 180000 }
       )
 
       if (!response.choices[0].message.content) {
